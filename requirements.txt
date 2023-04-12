@@ -3,5 +3,7 @@ numpy
 seaborn
 librosa
 IPython
-
--e .
+scikit-learn
+sounddevice
+soundfile
+# -e .
