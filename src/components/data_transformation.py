@@ -184,11 +184,13 @@ class DataTransformation(FeatureGenerator):
             logging.info('Data Transformation Started')
             preprocessor_class=DataTransformation()
             preprocessor_class.data_transformer(X_train_df)
-            X_train_scaler=preprocessor_class.data_transformer(X_train_df)
-            X_test_scaler=preprocessor_class.data_transformer(X_test_df)
+            X_train_scaler=preprocessor_class.get_data_transformer(X_train_df)
+            X_test_scaler=preprocessor_class.get_data_transformer(X_test_df)
             logging.info('Data Transformation Completed')
+            y_train_ar=y_train_df.to_numpy()
+            y_test_ar=y_test_df.to_numpy()
             
-            return X_train_scaler, X_test_scaler, y_train_df, y_test_df
+            return X_train_scaler, X_test_scaler, y_train_ar.ravel(), y_test_ar.ravel()
 
         except Exception as e:
                 raise CustomException(e,sys)

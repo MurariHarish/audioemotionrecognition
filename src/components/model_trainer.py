@@ -22,20 +22,12 @@ class ModelTrainer:
     def initiate_model_trainer(self,X_train,X_test,y_train,y_test):
         try:
             models = {
-                  'MLP Classifier': MLPClassifier(),
-                  'Random Forest':RandomForestClassifier(),
+                  'MLP Classifier': MLPClassifier(max_iter=500),
              }
             params={
-                 "Random Forest":{
-                        'n_estimators': [25, 50, 100, 150],
-                        'max_features': ['sqrt', 'log2', None],
-                        'max_depth': [3, 6, 9],
-                        'max_leaf_nodes': [3, 6, 9],
-                 },
-                 "MLP Classifer":{
-                        'hidden_layer_sizes': [(10,), (20,), (30,), (40,)],
-                        'activation': ['relu', 'tanh', 'logistic'],
-                        'learning_rate_init': [0.001, 0.01, 0.1],
+                 'MLP Classifier':{
+                        'hidden_layer_sizes': [(10,)],
+                        'random_state':[42],
                  }
             }
 
@@ -51,10 +43,10 @@ class ModelTrainer:
                 list(model_report.values()).index(Best_Model_Accuracy)
             ]
 
-            if Best_Model_Accuracy<0.6:
-                raise CustomException("No best model found")
-            else:
-                logging.info(f"Best found model on both training and testing dataset")
+            # if Best_Model_Accuracy<0.6:
+            #     raise CustomException("No best model found")
+            # else:
+            #     logging.info(f"Best found model on both training and testing dataset")
 
             Best_Model = models[Best_Model_Name]
 

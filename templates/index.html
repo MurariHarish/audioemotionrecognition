@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Emotion Recognition</title>
+    <script>
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        async function recordAudio() {
+        const mimeType = 'audio/wav';
+        const options = { mimeType, audioBitsPerSecond: 128000 }; // Add audioBitsPerSecond to set the audio quality
+
+        recordedChunks = [];
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        mediaRecorder = new MediaRecorder(stream, options);
+        mediaRecorder.addEventListener('dataavailable', event => {
+            if (event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        });
+
+        mediaRecorder.start();
+    }
+
+
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                mediaRecorder = null;
+            }
+        }
+
+        async function submitAudio() {
+            stopRecording();
+
+            const formData = new FormData();
+            const audioBlob = new Blob(recordedChunks);
+            formData.append('audiofile', audioBlob);
+
+            const response = await fetch('/findyourmood', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.text();
+            document.getElementById('results').innerText = `Your predicted mood is: ${result}`;
+
+            // Play the recorded audio
+            const audioURL = URL.createObjectURL(audioBlob);
+            const audioPlayer = document.getElementById('audioPlayer');
+            audioPlayer.src = audioURL;
+            audioPlayer.controls = true;
+        }
+    </script>
+</head>
+<body>
+    <h1>Audio Emotion Recognition</h1>
+    <button onclick="recordAudio()">Start Recording</button>
+    <button onclick="stopRecording()">Stop Recording</button>
+    <button onclick="submitAudio()">Find your mood</button>
+    <h2 id="results"></h2>
+    <audio id="audioPlayer"></audio>
+</body>
+</html>
