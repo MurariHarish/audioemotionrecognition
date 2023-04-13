@@ -6,4 +6,5 @@ IPython
 scikit-learn
 sounddevice
 soundfile
+dill
 # -e .

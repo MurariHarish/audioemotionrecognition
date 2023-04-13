@@ -20,10 +20,12 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 from src.exception import CustomException
 from src.logger import logging
 
+# from src.utils import save_object
+
 
 @dataclass
 class DataTransformationConfig:
-    preprocessor_obj_file_path=os.path.join('artifacts','preprocessor.pkl')
+    pass
 
 class FeatureGenerator:
     def __init__(self):
@@ -32,30 +34,26 @@ class FeatureGenerator:
     def noise(self, data, nf):
         try:
             return data + nf * np.random.randn(len(data))
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
     
     def stretch(self, data, stretch_f):
         try:
             return librosa.effects.time_stretch(data, rate = stretch_f)
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
     
     def shift(self, data, sampling_rate, shift_r):
         try:
             shift_distance = np.random.randint(shift_r[0], shift_r[1])
             return np.roll(data, shift_distance)
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
     
     def pitch(self, data, sampling_rate, pitch_f):
         try:
             return librosa.effects.pitch_shift(data, sr=sampling_rate, n_steps=pitch_f)
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
 
     def extract_features(self, data, sample_rate):
@@ -82,8 +80,7 @@ class FeatureGenerator:
                                         spec_bandwidth))
 
             return audio_feature_ar
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
     
     def get_features(self, path):
@@ -112,8 +109,7 @@ class FeatureGenerator:
     
             return crema_data_features
         
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
             
     def feature_generator(self,raw_data):
@@ -133,8 +129,7 @@ class FeatureGenerator:
 
             return X_df,y_df
 
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
             
 
@@ -142,23 +137,34 @@ class DataTransformation(FeatureGenerator):
 
     def __init__(self):
         self.data_transformation_config=DataTransformationConfig()
+        self.scaler=None
             
-    def data_transformer(self, X_train_data, X_test_data):
+    def data_transformer(self, X_train_data):
         '''
         This function performs data transformation
         '''
         try:
-            scaler = StandardScaler().fit(X_train_data)
-            X_train_scaler = scaler.transform(X_train_data)
-            X_test_scaler = scaler.transform(X_test_data)
+            self.scaler = StandardScaler().fit(X_train_data)
+            # X_train_scaler = scaler.transform(X_train_data)
+            # X_test_scaler = scaler.transform(X_test_data)
 
-            return X_train_scaler,X_test_scaler
+            # return X_train_scaler,X_test_scaler
+            return self.scaler
 
-        except:
-            with Exception as e:
+        except Exception as e:
+                raise CustomException(e,sys)
+            
+    def get_data_transformer(self,X_data):
+        if self.scaler is None:
+            raise ValueError("Scaler has not been fitted. Call data_transformer with X_train_data first.")
+        
+        try:
+            X_scaler=self.scaler.transform(X_data)
+            return X_scaler
+
+        except Exception as e:
                 raise CustomException(e,sys)
 
-        
     def initiate_data_transformation(self,train_path,test_path):
         '''
         This function is responsible for data preprocessing
@@ -167,7 +173,7 @@ class DataTransformation(FeatureGenerator):
             raw_train = pd.read_csv(train_path)
             raw_test = pd.read_csv(test_path)
 
-            logging.info('Reading Train and Test data')
+            logging.info('Reading Train and Test data completed')
 
             logging.info('Fetching audio features of Train data')
             X_train_df,y_train_df=self.feature_generator(raw_train)
@@ -176,11 +182,13 @@ class DataTransformation(FeatureGenerator):
             X_test_df,y_test_df=self.feature_generator(raw_test)
 
             logging.info('Data Transformation Started')
-            X_train_scaler,X_test_scaler=self.data_transformer(X_train_df,X_test_df)
+            preprocessor_class=DataTransformation()
+            preprocessor_class.data_transformer(X_train_df)
+            X_train_scaler=preprocessor_class.data_transformer(X_train_df)
+            X_test_scaler=preprocessor_class.data_transformer(X_test_df)
             logging.info('Data Transformation Completed')
-
+            
             return X_train_scaler, X_test_scaler, y_train_df, y_test_df
 
-        except:
-            with Exception as e:
+        except Exception as e:
                 raise CustomException(e,sys)
